@@ -18,12 +18,8 @@ import 'package:wallet_test/features/transfers/transfer_status_sync_service.dart
 final GetIt sl = GetIt.instance;
 
 void registerAppDependencies() {
-  sl.allowFactoryRetrieval = true;
-
   if (!sl.isRegistered<IAuthRepository>()) {
-    sl.registerLazySingleton<IAuthRepository>(
-      () => DevAuthRepository(),
-    );
+    sl.registerLazySingleton<IAuthRepository>(() => DevAuthRepository());
   }
 
   if (!sl.isRegistered<IAddressRepository>()) {
@@ -51,9 +47,7 @@ void registerAppDependencies() {
   }
 
   if (!sl.isRegistered<ICardIssuer>()) {
-    sl.registerLazySingleton<ICardIssuer>(
-      () => DevCardIssuer(),
-    );
+    sl.registerLazySingleton<ICardIssuer>(() => DevCardIssuer());
   }
 
   if (!sl.isRegistered<TransferStatusSyncService>()) {
@@ -67,23 +61,17 @@ void registerAppDependencies() {
 
   if (!sl.isRegistered<AddressTileBloc>()) {
     sl.registerFactory<AddressTileBloc>(
-      () => AddressTileBloc(
-        repository: sl<IAddressRepository>(),
-      ),
+      () => AddressTileBloc(repository: sl<IAddressRepository>()),
     );
   }
 
   if (!sl.isRegistered<CardIssueBloc>()) {
     sl.registerFactory<CardIssueBloc>(
-      () => CardIssueBloc(
-        issuer: sl<ICardIssuer>(),
-      ),
+      () => CardIssueBloc(issuer: sl<ICardIssuer>()),
     );
   }
 
   if (!sl.isRegistered<AppRouter>()) {
-    sl.registerLazySingleton<AppRouter>(
-      () => AppRouter(),
-    );
+    sl.registerLazySingleton<AppRouter>(() => AppRouter());
   }
 }

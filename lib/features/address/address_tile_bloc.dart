@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:wallet_test/features/address/address_repository.dart';
 
-class AddressTileEvent {}
+abstract class AddressTileEvent {
+  const AddressTileEvent();
+}
 
 class CopyTapped extends AddressTileEvent {
   const CopyTapped(this.address);
@@ -24,22 +26,13 @@ class AddressTileState {
 
   final bool copied;
   final String? error;
-
-  AddressTileState copyWith({
-    bool? copied,
-    String? error,
-  }) {
-    return AddressTileState(
-      copied: copied ?? this.copied,
-      error: error,
-    );
-  }
 }
 
 class AddressTileBloc extends Bloc<AddressTileEvent, AddressTileState> {
   AddressTileBloc({
     required IAddressRepository repository,
-  })  : _repository = repository {
+  })  : _repository = repository,
+        super(const AddressTileState()) {
     on<CopyTapped>(_onCopyTapped);
     on<ResetCopied>(_onResetCopied);
   }
@@ -51,27 +44,43 @@ class AddressTileBloc extends Bloc<AddressTileEvent, AddressTileState> {
     CopyTapped event,
     Emitter<AddressTileState> emit,
   ) async {
+    _resetTimer?.cancel();
+    _resetTimer = null;
     emit(const AddressTileState());
 
     try {
       await _repository.copyAddress(event.address);
+      if (isClosed) {
+        return;
+      }
 
       emit(const AddressTileState(copied: true));
-
-      _resetTimer?.cancel();
       _resetTimer = Timer(
         const Duration(milliseconds: 1500),
-        () => add(const ResetCopied()),
+        () {
+          if (!isClosed) {
+            add(const ResetCopied());
+          }
+        },
       );
     } catch (_) {
-      emit(const AddressTileState(error: 'copy_failed'));
+      if (!isClosed) {
+        emit(const AddressTileState(error: 'copy_failed'));
+      }
     }
   }
 
-  Future<void> _onResetCopied(
+  void _onResetCopied(
     ResetCopied event,
     Emitter<AddressTileState> emit,
-  ) async {
+  ) {
     emit(const AddressTileState());
+  }
+
+  @override
+  Future<void> close() {
+    _resetTimer?.cancel();
+    _resetTimer = null;
+    return super.close();
   }
 }
